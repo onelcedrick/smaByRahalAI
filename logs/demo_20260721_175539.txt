@@ -1,0 +1,117 @@
+=== TEST SMA + THÉORIE DES CATÉGORIES ===
+
+
+🔹 Test 1 : Mode NORMAL
+
+============================================================
+🚀 LANCEMENT SMA + CATÉGORIES (mode normal)
+============================================================
+
+[FONCTEUR] ✅ Créé en mode 'normal'
+[BUS] 📬 Boîte créée pour 'Receptionniste'
+[BUS] 📬 Boîte créée pour 'Verificateur'
+[BUS] 📬 Boîte créée pour 'Banquier'
+[BUS] 📬 Boîte créée pour 'Logistique'
+[BUS] 📬 Boîte créée pour 'Superviseur'
+[Receptionniste] 🟢 Agent démarré
+[Verificateur] 🟢 Agent démarré
+[Banquier] 🟢 Agent démarré
+[Logistique] 🟢 Agent démarré
+[Superviseur] 🟢 Superviseur démarré, vérification des compositions...
+
+[MAIN] 📤 Injection commande 4001
+[BUS] ➡️  Message envoyé à 'Receptionniste' (commande 4001)
+
+[MAIN] ⏳ SMA en cours... (6s)
+
+[Receptionniste] 📥 Reçoit commande brute 4001
+[Receptionniste] ✅ Commande 4001 validée, envoi au Vérificateur
+[BUS] ➡️  Message envoyé à 'Verificateur' (commande 4001)
+[Verificateur] 📥 Reçoit commande 4001 (état: Créée)
+[Verificateur] ❌ Commande 4001 : RUPTURE DE STOCK
+[BUS] ➡️  Message envoyé à 'Banquier' (commande 4001)
+[Banquier] 📥 Reçoit commande 4001 (état: Créée)
+[Banquier] ⏭️ Commande 4001 déjà en échec
+[BUS] ➡️  Message envoyé à 'Logistique' (commande 4001)
+[Logistique] 📥 Reçoit commande 4001 (état: Créée)
+[Logistique] ⏭️ Commande 4001 en échec, annulée
+[BUS] ➡️  Message envoyé à 'Superviseur' (commande 4001)
+[Superviseur] ⚠️  Commande 4001 : chemin incomplet ['Créée']
+[Superviseur] ⚠️  Commande 4001 : chemin incomplet ['Créée']
+[Superviseur] ⚠️  Commande 4001 : chemin incomplet ['Créée']
+[Superviseur] ⚠️  Commande 4001 : chemin incomplet ['Créée']
+
+[MAIN] 🛑 Arrêt des agents...
+[Banquier] 🔴 Agent arrêté
+[Verificateur] 🔴 Agent arrêté
+[Receptionniste] 🔴 Agent arrêté
+[Logistique] 🔴 Agent arrêté
+[Superviseur] 🔴 Superviseur arrêté
+
+============================================================
+📊 RAPPORT DU SUPERVISEUR
+============================================================
+  Commande 4001: ECHEC | Chemin: Créée
+============================================================
+
+============================================================
+🏁 TERMINÉ
+============================================================
+
+
+🔹 Test 2 : Mode DEBUG (Foncteur actif)
+
+============================================================
+🚀 LANCEMENT SMA + CATÉGORIES (mode debug)
+============================================================
+
+[FONCTEUR] ✅ Créé en mode 'debug'
+[BUS] 📬 Boîte créée pour 'Receptionniste'
+[BUS] 📬 Boîte créée pour 'Verificateur'
+[BUS] 📬 Boîte créée pour 'Banquier'
+[BUS] 📬 Boîte créée pour 'Logistique'
+[BUS] 📬 Boîte créée pour 'Superviseur'
+[Receptionniste] 🟢 Agent démarré
+[Verificateur] 🟢 Agent démarré
+[Banquier] 🟢 Agent démarré
+[Logistique] 🟢 Agent démarré
+[Superviseur] 🟢 Superviseur démarré, vérification des compositions...
+
+[MAIN] 📤 Injection commande 4002
+[BUS] ➡️  Message envoyé à 'Receptionniste' (commande 4002)
+
+[MAIN] ⏳ SMA en cours... (6s)
+
+[Receptionniste] 📥 Reçoit commande brute 4002
+[Receptionniste] ✅ Commande 4002 validée, envoi au Vérificateur
+[BUS] ➡️  Message envoyé à 'Verificateur' (commande 4002)
+[Verificateur] 📥 Reçoit commande 4002 (état: Créée)
+[Verificateur] ✅ Commande 4002 vérifiée
+[BUS] ➡️  Message envoyé à 'Banquier' (commande 4002)
+[Banquier] 📥 Reçoit commande 4002 (état: Vérifiée)
+[Banquier] ✅ Commande 4002 payée (149€)
+[BUS] ➡️  Message envoyé à 'Logistique' (commande 4002)
+[Logistique] 📥 Reçoit commande 4002 (état: Payée)
+[Logistique] ✅ Commande 4002 expédiée ! Suivi : AZ-2850-FR
+[BUS] ➡️  Message envoyé à 'Superviseur' (commande 4002)
+[Superviseur] ✅ Commande 4002 : composition valide ! Chemin : Créée → Vérifiée → Payée → Expédiée → Livrée
+[Superviseur] ✅ Commande 4002 : composition valide ! Chemin : Créée → Vérifiée → Payée → Expédiée → Livrée
+[Superviseur] ✅ Commande 4002 : composition valide ! Chemin : Créée → Vérifiée → Payée → Expédiée → Livrée
+[Superviseur] ✅ Commande 4002 : composition valide ! Chemin : Créée → Vérifiée → Payée → Expédiée → Livrée
+
+[MAIN] 🛑 Arrêt des agents...
+[Logistique] 🔴 Agent arrêté
+[Banquier] 🔴 Agent arrêté
+[Receptionniste] 🔴 Agent arrêté
+[Verificateur] 🔴 Agent arrêté
+[Superviseur] 🔴 Superviseur arrêté
+
+============================================================
+📊 RAPPORT DU SUPERVISEUR
+============================================================
+  Commande 4002: OK | Chemin: Créée → Vérifiée → Payée → Expédiée → Livrée
+============================================================
+
+============================================================
+🏁 TERMINÉ
+============================================================
