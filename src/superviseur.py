@@ -1,4 +1,4 @@
-# src/superviseur.py - Superviseur (validateur) et Foncteur (transformateur)
+# src/superviseur.py - Superviseur et Foncteur (Version française)
 
 import threading
 import time
@@ -7,8 +7,9 @@ from src.modelisation import CATEGORY
 from src.database import save_order
 
 class Superviseur(threading.Thread):
-    """Agent observateur qui valide les compositions catégoriques."""
-    
+    """
+    Agent observateur qui valide les compositions catégoriques.
+    """
     def __init__(self, bus):
         super().__init__()
         self.nom = "Superviseur"
@@ -23,13 +24,13 @@ class Superviseur(threading.Thread):
         self.active = False
     
     def run(self):
-        init("Superviseur started, validating compositions...")
+        init("Superviseur démarré, validation des compositions...")
         while self.active:
             msg = self.bus.receive(self.nom, timeout=0.3)
             if msg is not None:
                 self._analyze(msg)
             time.sleep(0.05)
-        info("Superviseur stopped")
+        info("Superviseur arrêté")
     
     def _analyze(self, message):
         order = message.get("order")
@@ -42,7 +43,7 @@ class Superviseur(threading.Thread):
         mode = order.get("mode_actif", "normal")
         
         if order_id not in self.tracked_orders:
-            self.tracked_orders[order_id] = {"path": [], "status": "IN_PROGRESS"}
+            self.tracked_orders[order_id] = {"path": [], "status": "EN_COURS"}
         
         if history and len(history) > len(self.tracked_orders[order_id]["path"]):
             self.tracked_orders[order_id]["path"] = history.copy()
@@ -63,66 +64,65 @@ class Superviseur(threading.Thread):
                             break
                     if not found:
                         valid = False
-                        violation = f"Invalid transition {dep} -> {arr}"
+                        violation = f"Transition invalide {dep} -> {arr}"
                         self.violations.append((order_id, violation))
                         warn(f"VIOLATION : {violation}")
                         break
                 
                 if valid:
-                    self.tracked_orders[order_id]["status"] = "VALID"
-                    ok(f"Order {order_id} path valid : {' -> '.join(path)}")
-                    # Sauvegarde DB
+                    self.tracked_orders[order_id]["status"] = "VALIDE"
+                    ok(f"Commande {order_id} : chemin valide ! {' -> '.join(path)}")
                     save_order(
                         id_cmd=order_id,
-                        product=order.get("product", "Unknown"),
+                        product=order.get("product", "Inconnu"),
                         price=order.get("price", 0.0),
                         quantity=order.get("quantity", 1),
-                        status="VALID",
+                        status="VALIDE",
                         path=path,
                         tracking=order.get("tracking_number"),
                         error=None,
                         mode=mode
                     )
                 else:
-                    self.tracked_orders[order_id]["status"] = "INVALID"
+                    self.tracked_orders[order_id]["status"] = "INVALIDE"
                     save_order(
                         id_cmd=order_id,
-                        product=order.get("product", "Unknown"),
+                        product=order.get("product", "Inconnu"),
                         price=order.get("price", 0.0),
                         quantity=order.get("quantity", 1),
-                        status="INVALID",
+                        status="INVALIDE",
                         path=path,
                         tracking=order.get("tracking_number"),
-                        error="Composition violation",
+                        error="Violation de composition",
                         mode=mode
                     )
             else:
-                self.tracked_orders[order_id]["status"] = "FAILED"
-                warn(f"Order {order_id} incomplete path : {path}")
+                self.tracked_orders[order_id]["status"] = "ECHEC"
+                warn(f"Commande {order_id} : chemin incomplet {path}")
                 save_order(
                     id_cmd=order_id,
-                    product=order.get("product", "Unknown"),
+                    product=order.get("product", "Inconnu"),
                     price=order.get("price", 0.0),
                     quantity=order.get("quantity", 1),
-                    status="FAILED",
+                    status="ECHEC",
                     path=path,
                     tracking=order.get("tracking_number"),
-                    error=order.get("error", "Business failure"),
+                    error=order.get("error", "Échec métier"),
                     mode=mode
                 )
     
     def report(self):
         """Génère un rapport des compositions vérifiées."""
         print("\n" + "="*60)
-        print("SUPERVISEUR REPORT")
+        print("RAPPORT DU SUPERVISEUR")
         print("="*60)
         for oid, data in self.tracked_orders.items():
-            path_str = " -> ".join(data["path"]) if data["path"] else "(empty)"
-            print(f"  Order {oid}: {data['status']} | Path: {path_str}")
+            path_str = " -> ".join(data["path"]) if data["path"] else "(vide)"
+            print(f"  Commande {oid}: {data['status']} | Chemin: {path_str}")
         if self.violations:
-            print("\n  Violations detected :")
+            print("\n  Violations détectées :")
             for oid, violation in self.violations:
-                print(f"    - Order {oid}: {violation}")
+                print(f"    - Commande {oid}: {violation}")
         print("="*60)
         return self.tracked_orders
 
@@ -132,7 +132,6 @@ class Foncteur:
     Le Foncteur transforme globalement le comportement du SMA
     (ex: mode normal vs debug) sans modifier les agents.
     """
-    
     def __init__(self, bus, mode="normal"):
         self.bus = bus
         self.mode = mode
@@ -147,7 +146,6 @@ class Foncteur:
                 "Deliver": {"target": "Logistique", "action": "Deliver"}
             }
         elif self.mode == "debug":
-            # Mode debug : on ajoute des délais et des logs supplémentaires
             return {
                 "Verify": {"target": "Verificateur", "action": "Verify_DEBUG", "delay": 0.3},
                 "Pay": {"target": "Banquier", "action": "Pay_DEBUG", "delay": 0.3},

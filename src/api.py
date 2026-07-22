@@ -1,4 +1,4 @@
-# src/api.py - API REST avec interface web intégrée
+# src/api.py - API REST avec interface web (Version française)
 
 import time
 from fastapi import FastAPI, HTTPException
@@ -7,7 +7,6 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional, List
 import uvicorn
-import os
 
 from src.sma_core import (
     MessageBus,
@@ -21,9 +20,9 @@ from src.sma_core import (
 from src.database import get_all_orders, get_stats
 from src.logger import api, info, ok, err
 
-app = FastAPI(title="SMA + Category Theory API")
+app = FastAPI(title="SMA + Théorie des Catégories API")
 
-# Servir les fichiers statiques (le dossier frontend)
+# Servir les fichiers statiques (interface)
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
 # Modèles de données
@@ -51,7 +50,6 @@ async def root():
 async def run_order(order: OrderInput):
     """
     Exécute le SMA sur une nouvelle commande.
-    - mode: "normal" ou "debug" (défini dans le body)
     """
     order_id = int(time.time() * 1000) % 100000
     
@@ -64,7 +62,7 @@ async def run_order(order: OrderInput):
         "mode_actif": order.mode
     }
     
-    api(f"Received order {order_id} (mode: {order.mode})")
+    api(f"Commande reçue {order_id} (mode: {order.mode})")
     
     # --- Lancement du SMA ---
     bus = MessageBus()
@@ -84,19 +82,16 @@ async def run_order(order: OrderInput):
     
     time.sleep(0.5)
     bus.send("Receptionniste", {"order": order_dict})
-    # Laisser le temps de traiter (5 sec max)
     time.sleep(5)
     
-    # Arrêt des agents
     for agent in agents:
         agent.stop()
     for agent in agents:
         agent.join(timeout=1)
     
-    # Récupération du rapport
     report = superviseur.report()
     if order_id not in report:
-        raise HTTPException(status_code=500, detail="Order not processed by Superviseur")
+        raise HTTPException(status_code=500, detail="La commande n'a pas été traitée par le Superviseur")
     
     data = report[order_id]
     return OrderResponse(
@@ -132,6 +127,5 @@ async def stats():
     """Statistiques sur les commandes."""
     return {"stats": get_stats()}
 
-# --- Point d'entrée pour le développement ---
 if __name__ == "__main__":
     uvicorn.run("src.api:app", host="0.0.0.0", port=8000, reload=True)

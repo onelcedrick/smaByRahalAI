@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMA - Category Theory Interface</title>
+    <title>SMA - Interface Théorie des Catégories</title>
     <style>
         /* --- Reset et base --- */
         * {
@@ -39,11 +39,16 @@
             letter-spacing: -0.02em;
         }
 
+        header h1 span {
+            font-weight: 400;
+            color: #64748b;
+        }
+
         header p {
             color: #475569;
         }
 
-        /* --- Grille principale (2 colonnes) --- */
+        /* --- Grille principale --- */
         .grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -292,22 +297,18 @@
             padding-top: 1.5rem;
         }
 
-        /* --- Utilitaires --- */
         .flex-between {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-
-        .mt-1 { margin-top: 0.5rem; }
-        .mb-1 { margin-bottom: 0.5rem; }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Multi-Agent System <span style="font-weight:400;color:#64748b;">| Category Theory</span></h1>
-            <p>Submit an order. The distributed agents process it while the Superviseur validates the categorical composition.</p>
+            <h1>Système Multi-Agents <span>| Théorie des Catégories</span></h1>
+            <p>Saisissez une commande. Les agents distribués la traitent tandis que le Superviseur valide la composition catégorique.</p>
         </header>
 
         <div class="grid">
@@ -315,68 +316,68 @@
             <div>
                 <!-- Formulaire -->
                 <div class="card">
-                    <h2>New Order <span class="badge">Client</span></h2>
+                    <h2>Nouvelle Commande <span class="badge">Client</span></h2>
                     <form id="orderForm">
                         <div class="form-group">
-                            <label for="productName">Product Name / Model</label>
-                            <input type="text" id="productName" placeholder="e.g. UltraBook Pro" required>
+                            <label for="productName">Nom du produit / Modèle</label>
+                            <input type="text" id="productName" placeholder="Ex: UltraBook Pro" required>
                         </div>
                         <div class="form-group">
-                            <label for="productPrice">Price (EUR)</label>
+                            <label for="productPrice">Prix (EUR)</label>
                             <input type="number" id="productPrice" placeholder="1299" step="0.01" required>
                         </div>
                         <div class="form-group">
-                            <label for="productQty">Quantity</label>
+                            <label for="productQty">Quantité</label>
                             <input type="number" id="productQty" placeholder="1" value="1" min="1">
                         </div>
                         <div class="form-group">
                             <label for="modeSelect">Mode (Foncteur)</label>
                             <select id="modeSelect">
-                                <option value="normal">Normal (Standard processing)</option>
-                                <option value="debug">Debug (With delays & verbose)</option>
+                                <option value="normal">Normal (Traitement standard)</option>
+                                <option value="debug">Débogage (Avec délais et verbosité)</option>
                             </select>
                         </div>
-                        <button type="submit" class="btn" id="submitBtn">Process Order</button>
+                        <button type="submit" class="btn" id="submitBtn">Lancer le traitement</button>
                     </form>
                 </div>
 
                 <!-- Historique -->
                 <div class="card">
                     <div class="flex-between">
-                        <h2>History <span class="badge">Database</span></h2>
-                        <button id="refreshHistory" class="btn btn-secondary btn-sm">Refresh</button>
+                        <h2>Historique <span class="badge">Base de données</span></h2>
+                        <button id="refreshHistory" class="btn btn-secondary btn-sm">Rafraîchir</button>
                     </div>
                     <div class="table-wrapper">
                         <table>
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th>Product</th>
-                                    <th>Status</th>
-                                    <th>Path</th>
+                                    <th>Produit</th>
+                                    <th>Statut</th>
+                                    <th>Chemin</th>
                                 </tr>
                             </thead>
                             <tbody id="historyBody">
-                                <tr><td colspan="4" style="text-align:center;color:#94a3b8;">No orders yet.</td></tr>
+                                <tr><td colspan="4" style="text-align:center;color:#94a3b8;">Aucune commande pour le moment.</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- COLONNE DROITE : Panneau de logs avec indicateur d'agent -->
+            <!-- COLONNE DROITE : Panneau de logs -->
             <div>
                 <div class="card" style="height:100%; display:flex; flex-direction:column;">
-                    <h2>Processing Logs <span class="badge">Real-time</span></h2>
+                    <h2>Journal de traitement <span class="badge">Temps réel</span></h2>
                     <div id="logPanel" class="log-panel">
                         <div class="log-header">
                             <div id="agentIcon" class="agent-icon" style="color:#64748b;">[-]</div>
                             <div class="agent-label">
-                                Active Agent : <span id="agentName" class="active-name">Idle</span>
+                                Agent actif : <span id="agentName" class="active-name">Inactif</span>
                             </div>
                         </div>
                         <div id="logBody" class="log-body">
-                            <div class="log-empty">Waiting for order submission...</div>
+                            <div class="log-empty">En attente de soumission...</div>
                         </div>
                     </div>
                 </div>
@@ -384,7 +385,7 @@
         </div>
 
         <div class="footer">
-            Powered by FastAPI, SQLite, and Category Theory
+            Propulsé par FastAPI, SQLite et la Théorie des Catégories
         </div>
     </div>
 
@@ -409,7 +410,7 @@
             'Banquier': { icon: 'B', color: '#10b981' },
             'Logistique': { icon: 'L', color: '#8b5cf6' },
             'Superviseur': { icon: 'S', color: '#06b6d4' },
-            'Idle': { icon: '-', color: '#64748b' }
+            'Inactif': { icon: '-', color: '#64748b' }
         };
 
         // --- Fonctions de logs ---
@@ -432,58 +433,50 @@
         }
 
         function showEmptyLog() {
-            logBody.innerHTML = '<div class="log-empty">Waiting for order submission...</div>';
+            logBody.innerHTML = '<div class="log-empty">En attente de soumission...</div>';
         }
 
         // --- Mise à jour de l'icône d'agent ---
         function setActiveAgent(agentKey) {
-            const agent = agents[agentKey] || agents['Idle'];
+            const agent = agents[agentKey] || agents['Inactif'];
             agentIcon.textContent = `[${agent.icon}]`;
             agentIcon.style.color = agent.color;
             agentName.textContent = agentKey;
         }
 
-        // --- Simulation des étapes du SMA avec changement d'agent ---
+        // --- Simulation des étapes du SMA (en français) ---
         async function simulateProcessing(orderData, mode) {
-            // Définition des étapes avec leur agent associé
             const steps = [
-                { msg: 'Order received by Receptionniste.', type: 'info', agent: 'Receptionniste' },
-                { msg: 'Receptionniste validates format and creates order (State: Created).', type: 'ok', agent: 'Receptionniste' },
-                { msg: 'Order forwarded to Verificateur.', type: 'info', agent: 'Verificateur' },
-                { msg: 'Verificateur checks stock...', type: 'info', agent: 'Verificateur' },
-                { msg: 'Stock available. Order verified (State: Verified).', type: 'ok', agent: 'Verificateur' },
-                { msg: 'Order forwarded to Banquier.', type: 'info', agent: 'Banquier' },
-                { msg: 'Banquier processes payment...', type: 'info', agent: 'Banquier' },
-                { msg: 'Payment approved. Order paid (State: Paid).', type: 'ok', agent: 'Banquier' },
-                { msg: 'Order forwarded to Logistique.', type: 'info', agent: 'Logistique' },
-                { msg: 'Logistique prepares shipment.', type: 'info', agent: 'Logistique' },
-                { msg: 'Order shipped and delivered (State: Delivered).', type: 'ok', agent: 'Logistique' },
-                { msg: 'Superviseur validates the complete path.', type: 'info', agent: 'Superviseur' },
-                { msg: 'Path: Created -> Verified -> Paid -> Shipped -> Delivered', type: 'path', agent: 'Superviseur' },
-                { msg: 'Superviseur status: VALID', type: 'ok', agent: 'Superviseur' }
+                { msg: 'Commande reçue par le Réceptionniste.', type: 'info', agent: 'Receptionniste' },
+                { msg: 'Le Réceptionniste valide le format et crée la commande (État: Created).', type: 'ok', agent: 'Receptionniste' },
+                { msg: 'Commande transférée au Vérificateur.', type: 'info', agent: 'Verificateur' },
+                { msg: 'Le Vérificateur consulte le stock...', type: 'info', agent: 'Verificateur' },
+                { msg: 'Stock disponible. Commande vérifiée (État: Verified).', type: 'ok', agent: 'Verificateur' },
+                { msg: 'Commande transférée au Banquier.', type: 'info', agent: 'Banquier' },
+                { msg: 'Le Banquier traite le paiement...', type: 'info', agent: 'Banquier' },
+                { msg: 'Paiement approuvé. Commande payée (État: Paid).', type: 'ok', agent: 'Banquier' },
+                { msg: 'Commande transférée à la Logistique.', type: 'info', agent: 'Logistique' },
+                { msg: 'La Logistique prépare l\'expédition.', type: 'info', agent: 'Logistique' },
+                { msg: 'Commande expédiée et livrée (État: Delivered).', type: 'ok', agent: 'Logistique' },
+                { msg: 'Le Superviseur valide le chemin complet.', type: 'info', agent: 'Superviseur' },
+                { msg: 'Chemin: Created -> Verified -> Paid -> Shipped -> Delivered', type: 'path', agent: 'Superviseur' },
+                { msg: 'Statut du Superviseur : VALIDE', type: 'ok', agent: 'Superviseur' }
             ];
 
-            // Si mode debug, ajouter des étapes supplémentaires
             if (mode === 'debug') {
-                steps.splice(4, 0, { msg: '[DEBUG] Extra check: verifying product details.', type: 'warn', agent: 'Verificateur' });
-                steps.splice(8, 0, { msg: '[DEBUG] Extra check: payment gateway latency simulated.', type: 'warn', agent: 'Banquier' });
+                steps.splice(4, 0, { msg: '[DEBUG] Vérification supplémentaire des détails du produit.', type: 'warn', agent: 'Verificateur' });
+                steps.splice(8, 0, { msg: '[DEBUG] Latence de la passerelle de paiement simulée.', type: 'warn', agent: 'Banquier' });
             }
 
-            // Ajouter un message de début
-            logMessage('Processing started...', 'info');
+            logMessage('Début du traitement...', 'info');
 
-            // Afficher chaque étape avec délai et mise à jour de l'icône
             for (let i = 0; i < steps.length; i++) {
                 await new Promise(resolve => setTimeout(resolve, 400 + Math.random() * 300));
                 const step = steps[i];
-                // Mettre à jour l'icône si l'agent est défini
-                if (step.agent) {
-                    setActiveAgent(step.agent);
-                }
+                if (step.agent) setActiveAgent(step.agent);
                 logMessage(step.msg, step.type);
             }
-            // Remettre l'icône sur Idle après la fin
-            setActiveAgent('Idle');
+            setActiveAgent('Inactif');
         }
 
         // --- Soumission du formulaire ---
@@ -496,23 +489,19 @@
             const mode = document.getElementById('modeSelect').value;
 
             if (!product || isNaN(price) || price <= 0) {
-                logMessage('Error: Please enter a valid product name and price.', 'err');
+                logMessage('Erreur : Veuillez saisir un nom de produit et un prix valides.', 'err');
                 return;
             }
 
-            // Désactiver le bouton, vider les logs et réinitialiser l'icône
             submitBtn.disabled = true;
             clearLogs();
-            setActiveAgent('Idle');
+            setActiveAgent('Inactif');
 
-            // Log du début
-            logMessage(`Order: ${product} (x${quantity}) - ${price} EUR`, 'info');
-            logMessage(`Mode: ${mode}`, 'info');
+            logMessage(`Commande : ${product} (x${quantity}) - ${price} EUR`, 'info');
+            logMessage(`Mode : ${mode}`, 'info');
 
-            // 1. Simuler le processing en temps réel (étapes visuelles)
             await simulateProcessing({ product, price, quantity }, mode);
 
-            // 2. Appeler l'API réelle
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
@@ -527,38 +516,36 @@
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    throw new Error(errorData.detail || 'API error');
+                    throw new Error(errorData.detail || 'Erreur API');
                 }
 
                 const data = await response.json();
 
-                // Afficher le résultat final
-                logMessage('--- Final Result ---', 'info');
+                logMessage('--- Résultat final ---', 'info');
                 setActiveAgent('Superviseur');
                 if (data.status === 'VALID' || data.status === 'OK') {
-                    logMessage(`Status: ${data.status}`, 'ok');
+                    logMessage(`Statut : ${data.status}`, 'ok');
                 } else if (data.status === 'FAILED') {
-                    logMessage(`Status: ${data.status}`, 'err');
-                    if (data.error) logMessage(`Error: ${data.error}`, 'err');
+                    logMessage(`Statut : ${data.status}`, 'err');
+                    if (data.error) logMessage(`Erreur : ${data.error}`, 'err');
                 } else {
-                    logMessage(`Status: ${data.status}`, 'warn');
+                    logMessage(`Statut : ${data.status}`, 'warn');
                 }
 
                 if (data.path && data.path.length > 0) {
-                    logMessage(`Path: ${data.path.join(' -> ')}`, 'path');
+                    logMessage(`Chemin : ${data.path.join(' -> ')}`, 'path');
                 }
                 if (data.tracking_number) {
-                    logMessage(`Tracking: ${data.tracking_number}`, 'info');
+                    logMessage(`Suivi : ${data.tracking_number}`, 'info');
                 }
 
-                // Rafraîchir l'historique
                 loadHistory();
 
             } catch (error) {
-                logMessage(`API Error: ${error.message}`, 'err');
+                logMessage(`Erreur API : ${error.message}`, 'err');
             } finally {
                 submitBtn.disabled = false;
-                setActiveAgent('Idle');
+                setActiveAgent('Inactif');
             }
         });
 
@@ -566,11 +553,11 @@
         async function loadHistory() {
             try {
                 const response = await fetch(HISTORY_URL);
-                if (!response.ok) throw new Error('Failed to fetch history');
+                if (!response.ok) throw new Error('Erreur de chargement');
                 const data = await response.json();
 
                 if (data.length === 0) {
-                    historyBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;">No orders yet.</td></tr>';
+                    historyBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;">Aucune commande pour le moment.</td></tr>';
                     return;
                 }
 
@@ -596,18 +583,16 @@
                 });
                 historyBody.innerHTML = html;
             } catch (error) {
-                historyBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#dc2626;">Error loading history.</td></tr>`;
+                historyBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#dc2626;">Erreur de chargement de l'historique.</td></tr>`;
             }
         }
 
-        // --- Rafraîchissement manuel ---
         refreshBtn.addEventListener('click', loadHistory);
 
-        // --- Initialisation ---
         document.addEventListener('DOMContentLoaded', () => {
             loadHistory();
             showEmptyLog();
-            setActiveAgent('Idle');
+            setActiveAgent('Inactif');
         });
     </script>
 </body>
