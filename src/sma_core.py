@@ -1,4 +1,4 @@
-# src/sma_core.py - SMA parallèle avec bus de messages (Version française)
+# src/sma_core.py - SMA parallèle (Vérificateur avec stock réel)
 
 import threading
 import queue
@@ -7,13 +7,12 @@ import time
 from src.logger import info, ok, err, warn, recv, send, init, sep
 from src.modelisation import get_next_state
 from src.superviseur import Superviseur, Foncteur
-from src.database import init_db
+from src.database import init_db, get_product, update_stock
 
 init_db()
 
 # --- 1. BUS DE MESSAGES ---
 class MessageBus:
-    """Centralise les échanges entre agents."""
     def __init__(self):
         self.mailboxes = {}
         self.lock = threading.Lock()
@@ -32,8 +31,6 @@ class MessageBus:
                 send(f"Message vers '{target}' (Commande {order_id})")
             else:
                 err(f"Destinataire '{target}' inconnu !")
-            
-            # Copie vers le Superviseur (interception)
             if "Superviseur" in self.mailboxes and target != "Superviseur":
                 self.mailboxes["Superviseur"].put(message)
     
@@ -48,7 +45,6 @@ class MessageBus:
 
 # --- 2. AGENT DE BASE ---
 class Agent(threading.Thread):
-    """Classe abstraite pour tous les agents."""
     def __init__(self, name, bus):
         super().__init__()
         self.name = name
@@ -78,45 +74,83 @@ class Agent(threading.Thread):
 # --- 3. AGENTS SPÉCIFIQUES ---
 
 class Receptionniste(Agent):
-    """Agent 1 : Valide le format et initie la commande."""
     def process(self, message):
         order = message.get("order", {})
-        recv(f"Commande brute {order.get('id', '?')}")
-        if "product" not in order or "price" not in order:
+        recv(f"Commande brute {order.get('id', '?')} - Contenu reçu: {order}")
+        
+        # Vérification stricte des champs obligatoires
+        product_id = order.get("product_id")
+        quantity = order.get("quantity")
+        
+        if product_id is None:
+            err(f"Commande {order.get('id', '?')} refusée : 'product_id' manquant ou nul")
             order["status"] = "REFUSED"
-            order["error"] = "Format invalide"
-            err(f"Commande {order['id']} refusée")
+            order["error"] = "Format invalide (product_id manquant)"
             return None
+        
+        if quantity is None or quantity <= 0:
+            err(f"Commande {order.get('id', '?')} refusée : quantité invalide ({quantity})")
+            order["status"] = "REFUSED"
+            order["error"] = "Quantité invalide"
+            return None
+        
+        # Récupération du produit en base
+        product = get_product(product_id)
+        if not product:
+            order["status"] = "REFUSED"
+            order["error"] = "Produit non trouvé en base"
+            err(f"Commande {order['id']} refusée : produit inconnu (id={product_id})")
+            return None
+        
+        # Ajout des infos produit (snapshot)
+        order["product_name"] = product[1]   # nom
+        order["price"] = product[2]          # prix
+        order["stock"] = product[3]          # stock actuel
+        
         order["state"] = "Created"
         order["status"] = "OK"
         order["history"] = ["Created"]
-        ok(f"Commande {order['id']} validée, envoi au Vérificateur")
+        ok(f"Commande {order['id']} validée ({product[1]}) - Envoi au Vérificateur")
         return {"target": "Verificateur", "message": {"order": order}}
 
 
 class Verificateur(Agent):
-    """Agent 2 : Vérifie la disponibilité du stock."""
     def process(self, message):
         order = message.get("order", {})
         recv(f"Commande {order.get('id', '?')} (état: {order.get('state', '?')})")
-        stock_ok = random.random() < 0.8
-        if not stock_ok:
+        
+        product_id = order.get("product_id")
+        quantity = order.get("quantity", 1)
+        
+        # Re-vérification du stock en base (au cas où)
+        product = get_product(product_id)
+        if not product:
             order["status"] = "FAILED"
-            order["error"] = "Stock insuffisant"
-            err(f"Commande {order['id']} : RUPTURE DE STOCK")
+            order["error"] = "Produit non trouvé"
+            err(f"Commande {order['id']} : PRODUIT INCONNU")
             return {"target": "Banquier", "message": {"order": order}}
         
+        # Vérification de la disponibilité
+        if product[3] < quantity:
+            order["status"] = "FAILED"
+            order["error"] = f"Stock insuffisant (demande: {quantity}, disponible: {product[3]})"
+            err(f"Commande {order['id']} : STOCK INSUFFISANT")
+            return {"target": "Banquier", "message": {"order": order}}
+        
+        # Décrémenter le stock
+        update_stock(product_id, -quantity)
+        
+        # Appliquer la flèche "Verify"
         next_state = get_next_state(order["state"], "Verify")
         if next_state:
             order["state"] = next_state
             order["status"] = "OK"
             order["history"].append(next_state)
-            ok(f"Commande {order['id']} vérifiée")
+            ok(f"Commande {order['id']} vérifiée (Stock OK, nouveau stock: {product[3] - quantity})")
         return {"target": "Banquier", "message": {"order": order}}
 
 
 class Banquier(Agent):
-    """Agent 3 : Traite le paiement."""
     def process(self, message):
         order = message.get("order", {})
         recv(f"Commande {order.get('id', '?')} (état: {order.get('state', '?')})")
@@ -141,7 +175,6 @@ class Banquier(Agent):
 
 
 class Logistique(Agent):
-    """Agent 4 : Prépare et expédie la commande."""
     def process(self, message):
         order = message.get("order", {})
         recv(f"Commande {order.get('id', '?')} (état: {order.get('state', '?')})")
@@ -210,9 +243,10 @@ def run_sma(order_test, mode="normal"):
 
 # --- 5. MAIN ---
 if __name__ == "__main__":
-    info("Test du SMA + Base de données")
-    order1 = {"id": 1001, "product": "Tablette", "price": 599, "quantity": 1, "status": "INIT"}
+    info("Test du SMA avec Catalogue Produits")
+    # Exemple de commande avec product_id (1 = UltraBook Pro)
+    order1 = {"id": 1001, "product_id": 1, "quantity": 1, "status": "INIT"}
     run_sma(order1, mode="normal")
     
-    order2 = {"id": 1002, "product": "Casque Audio", "price": 149, "quantity": 2, "status": "INIT"}
+    order2 = {"id": 1002, "product_id": 3, "quantity": 2, "status": "INIT"}  # Casque Audio Pro
     run_sma(order2, mode="debug")

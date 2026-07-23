@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catalogue des produits - SMA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #f4f6f9;
+            color: #1e293b;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        header h1 span {
+            font-weight: 400;
+            color: #64748b;
+        }
+
+        header .back-link a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            transition: background 0.2s;
+        }
+
+        header .back-link a:hover {
+            background: #f1f5f9;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .card h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card h2 .badge {
+            font-size: 0.7rem;
+            background: #e2e8f0;
+            color: #475569;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 0.75rem 0.5rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #f1f5f9;
+            font-weight: 600;
+            color: #334155;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        .stock-low {
+            color: #dc2626;
+            font-weight: 600;
+        }
+
+        .stock-ok {
+            color: #16a34a;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            color: #94a3b8;
+            padding: 2rem;
+        }
+
+        .footer {
+            margin-top: 2rem;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 1.5rem;
+        }
+
+        .btn-refresh {
+            background: #f1f5f9;
+            color: #1e293b;
+            border: 1px solid #cbd5e1;
+            padding: 0.4rem 1.2rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .btn-refresh:hover {
+            background: #e2e8f0;
+        }
+
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1>Catalogue <span>des produits disponibles</span></h1>
+                <p>Consultez le stock et les prix de tous les produits en base de données.</p>
+            </div>
+            <div class="back-link">
+                <a href="/">[ Retour à la commande ]</a>
+            </div>
+        </header>
+
+        <div class="card">
+            <div class="flex-between">
+                <h2>Liste des produits <span class="badge">Stock réel</span></h2>
+                <button id="refreshCatalog" class="btn-refresh">Rafraîchir</button>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nom</th>
+                            <th>Prix (Ariary)</th>
+                            <th>Stock disponible</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody id="catalogBody">
+                        <tr><td colspan="5" class="loading">Chargement du catalogue...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="footer">
+            Propulsé par FastAPI, SQLite et la Théorie des Catégories
+        </div>
+    </div>
+
+    <script>
+        const PRODUCTS_URL = '/products';
+        const catalogBody = document.getElementById('catalogBody');
+        const refreshBtn = document.getElementById('refreshCatalog');
+
+        async function loadCatalog() {
+            catalogBody.innerHTML = '<tr><td colspan="5" class="loading">Chargement du catalogue...</td></tr>';
+            try {
+                const response = await fetch(PRODUCTS_URL);
+                if (!response.ok) throw new Error('Erreur chargement');
+                const products = await response.json();
+
+                if (products.length === 0) {
+                    catalogBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94a3b8;">Aucun produit trouvé.</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                products.forEach(p => {
+                    const stockClass = p.stock < 3 ? 'stock-low' : 'stock-ok';
+                    html += `<tr>
+                        <td><strong>${p.id}</strong></td>
+                        <td>${p.name}</td>
+                        <td>${p.price} Ariary</td>
+                        <td class="${stockClass}">${p.stock}</td>
+                        <td>${p.description || '-'}</td>
+                    </tr>`;
+                });
+                catalogBody.innerHTML = html;
+            } catch (error) {
+                catalogBody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#dc2626;">Erreur de chargement du catalogue.</td></tr>`;
+                console.error(error);
+            }
+        }
+
+        refreshBtn.addEventListener('click', loadCatalog);
+
+        document.addEventListener('DOMContentLoaded', loadCatalog);
+    </script>
+</body>
+</html>

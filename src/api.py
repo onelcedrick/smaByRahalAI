@@ -1,4 +1,4 @@
-# src/api.py - API REST avec interface web (Version française)
+# src/api.py - API REST avec timeout augmenté
 
 import time
 from fastapi import FastAPI, HTTPException
@@ -17,18 +17,15 @@ from src.sma_core import (
     Superviseur,
     Foncteur
 )
-from src.database import get_all_orders, get_stats
+from src.database import get_all_orders, get_stats, get_all_products, get_product
 from src.logger import api, info, ok, err
 
 app = FastAPI(title="SMA + Théorie des Catégories API")
 
-# Servir les fichiers statiques (interface)
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
-# Modèles de données
 class OrderInput(BaseModel):
-    product: str
-    price: float
+    product_id: int
     quantity: int = 1
     mode: str = "normal"
 
@@ -39,30 +36,45 @@ class OrderResponse(BaseModel):
     tracking_number: Optional[str] = None
     error: Optional[str] = None
 
-# --- Routes API ---
-
 @app.get("/")
 async def root():
-    """Redirige vers l'interface utilisateur."""
     return FileResponse("frontend/index.html")
+
+@app.get("/catalog")
+async def catalog_page():
+    return FileResponse("frontend/catalog.html")
+
+@app.get("/products")
+async def products():
+    rows = get_all_products()
+    result = []
+    for row in rows:
+        result.append({
+            "id": row[0],
+            "name": row[1],
+            "price": row[2],
+            "stock": row[3],
+            "description": row[4]
+        })
+    return result
 
 @app.post("/run", response_model=OrderResponse)
 async def run_order(order: OrderInput):
-    """
-    Exécute le SMA sur une nouvelle commande.
-    """
     order_id = int(time.time() * 1000) % 100000
+    
+    product = get_product(order.product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
     
     order_dict = {
         "id": order_id,
-        "product": order.product,
-        "price": order.price,
+        "product_id": order.product_id,
         "quantity": order.quantity,
         "status": "INIT",
         "mode_actif": order.mode
     }
     
-    api(f"Commande reçue {order_id} (mode: {order.mode})")
+    api(f"Commande reçue {order_id} (Produit: {product[1]}, Qté: {order.quantity}, Mode: {order.mode})")
     
     # --- Lancement du SMA ---
     bus = MessageBus()
@@ -82,8 +94,20 @@ async def run_order(order: OrderInput):
     
     time.sleep(0.5)
     bus.send("Receptionniste", {"order": order_dict})
-    time.sleep(5)
     
+    # Attendre que le traitement soit terminé (max 10 secondes)
+    max_wait = 10
+    waited = 0
+    while waited < max_wait:
+        time.sleep(0.5)
+        waited += 0.5
+        # Vérifier si le superviseur a terminé la commande
+        if order_id in superviseur.tracked_orders:
+            status = superviseur.tracked_orders[order_id]["status"]
+            if status in ["VALIDE", "ECHEC", "INVALIDE"]:
+                break
+    
+    # Arrêter les agents
     for agent in agents:
         agent.stop()
     for agent in agents:
@@ -104,7 +128,6 @@ async def run_order(order: OrderInput):
 
 @app.get("/history")
 async def history():
-    """Retourne l'historique complet des commandes."""
     rows = get_all_orders()
     result = []
     for row in rows:
@@ -124,7 +147,6 @@ async def history():
 
 @app.get("/stats")
 async def stats():
-    """Statistiques sur les commandes."""
     return {"stats": get_stats()}
 
 if __name__ == "__main__":

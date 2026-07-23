@@ -1,16 +1,52 @@
-# src/database.py - Gestion de la base de données SQLite
+# src/database.py - Connexion à la base existante (table produit)
 
 import sqlite3
 from src.logger import db, ok, err
 
-DB_PATH = "sma.db"
+DB_PATH = "sma.db"   # Changez ici si votre base est ailleurs
 
 def init_db():
-    """Crée la table si elle n'existe pas."""
+    """Initialise les tables SMA et s'adapte à la table produit existante."""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
+    
+    # --- Vérifier / créer la table produit ---
+    c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='produit'")
+    if c.fetchone():
+        db("Table 'produit' existante trouvée.")
+        # Vérifier la présence de la colonne 'stock'
+        c.execute("PRAGMA table_info(produit)")
+        cols = [col[1] for col in c.fetchall()]
+        if 'stock' not in cols:
+            c.execute("ALTER TABLE produit ADD COLUMN stock INTEGER DEFAULT 10")
+            conn.commit()
+            db("Colonne 'stock' ajoutée à 'produit'.")
+    else:
+        db("Table 'produit' non trouvée. Création...")
+        c.execute('''
+            CREATE TABLE produit (
+                idP INTEGER PRIMARY KEY AUTOINCREMENT,
+                nom TEXT NOT NULL,
+                prix REAL NOT NULL,
+                stock INTEGER DEFAULT 10,
+                description TEXT
+            )
+        ''')
+        # Peuplement initial
+        produits = [
+            ("UltraBook Pro", 1299.99, 5, "Ordinateur portable"),
+            ("SmartPhone X", 899.00, 8, "Smartphone"),
+            ("Casque Audio Pro", 149.99, 15, "Casque sans fil"),
+            ("Tablette Lite", 399.00, 3, "Tablette"),
+            ("Souris Ergonomique", 59.99, 20, "Souris sans fil")
+        ]
+        c.executemany("INSERT INTO produit (nom, prix, stock, description) VALUES (?,?,?,?)", produits)
+        conn.commit()
+        db("Catalogue initial créé (5 produits).")
+    
+    # --- Table historique SMA (indépendante) ---
     c.execute('''
-        CREATE TABLE IF NOT EXISTS orders (
+        CREATE TABLE IF NOT EXISTS sma_orders (
             id INTEGER PRIMARY KEY,
             product TEXT,
             price REAL,
@@ -25,47 +61,64 @@ def init_db():
     ''')
     conn.commit()
     conn.close()
-    db("Database initialized (sma.db)")
+    db("Base de données prête.")
 
-def save_order(id_cmd, product, price, quantity, status, path, tracking=None, error=None, mode="normal"):
-    """Sauvegarde ou met à jour une commande."""
+
+# --- Accès aux produits ---
+def get_all_products():
+    """Retourne (idP, nom, prix, stock, description)."""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    path_str = " -> ".join(path) if path else ""
-    
-    c.execute('''
-        INSERT OR REPLACE INTO orders 
-        (id, product, price, quantity, status, path, tracking_number, error, mode)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (id_cmd, product, price, quantity, status, path_str, tracking, error, mode))
-    
-    conn.commit()
-    conn.close()
-    ok(f"Order {id_cmd} saved (status: {status})")
-
-def get_all_orders():
-    """Récupère toutes les commandes triées par date."""
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('SELECT * FROM orders ORDER BY created_at DESC')
+    c.execute('SELECT idP, nom, prix, stock, description FROM produit ORDER BY nom')
     rows = c.fetchall()
     conn.close()
     return rows
 
-def get_order_by_id(id_cmd):
-    """Récupère une commande spécifique."""
+def get_product(product_id):
+    """Retourne un produit par son idP."""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute('SELECT * FROM orders WHERE id = ?', (id_cmd,))
+    c.execute('SELECT idP, nom, prix, stock, description FROM produit WHERE idP = ?', (product_id,))
     row = c.fetchone()
     conn.close()
     return row
 
-def get_stats():
-    """Donne des statistiques sur les commandes."""
+def update_stock(product_id, delta):
+    """Met à jour le stock (delta négatif pour vente)."""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute('SELECT status, COUNT(*) FROM orders GROUP BY status')
+    c.execute('UPDATE produit SET stock = stock + ? WHERE idP = ?', (delta, product_id))
+    conn.commit()
+    conn.close()
+    db(f"Stock produit {product_id} mis à jour ({delta})")
+
+
+# --- Historique SMA ---
+def save_order(id_cmd, product, price, quantity, status, path, tracking=None, error=None, mode="normal"):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    path_str = " -> ".join(path) if path else ""
+    c.execute('''
+        INSERT OR REPLACE INTO sma_orders 
+        (id, product, price, quantity, status, path, tracking_number, error, mode)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (id_cmd, product, price, quantity, status, path_str, tracking, error, mode))
+    conn.commit()
+    conn.close()
+    ok(f"Commande SMA {id_cmd} sauvegardée")
+
+def get_all_orders():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('SELECT * FROM sma_orders ORDER BY created_at DESC')
+    rows = c.fetchall()
+    conn.close()
+    return rows
+
+def get_stats():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('SELECT status, COUNT(*) FROM sma_orders GROUP BY status')
     stats = c.fetchall()
     conn.close()
     return stats

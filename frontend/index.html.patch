@@ -1,0 +1,42 @@
+--- frontend/index.html.orig	2026-07-22 12:00:00.000000000 +0000
++++ frontend/index.html	2026-07-22 12:00:00.000000000 +0000
+@@ -60,6 +60,10 @@
+             margin-top: 2rem;
+             text-align: center;
+             color: #94a3b8;
+             font-size: 0.85rem;
+             border-top: 1px solid #e2e8f0;
+             padding-top: 1.5rem;
+         }
++
++        .header-link {
++            margin-left: 1rem;
++            color: #3b82f6;
++            text-decoration: none;
++            font-weight: 500;
++        }
++        .header-link:hover {
++            text-decoration: underline;
++        }
+     </style>
+ </head>
+ <body>
+     <div class="container">
+         <header>
+-            <h1>Système Multi-Agents <span>| Théorie des Catégories</span></h1>
++            <div style="display:flex; align-items:center; gap:1.5rem;">
++                <h1 style="margin:0;">Système Multi-Agents <span style="font-weight:400;color:#64748b;">| Théorie des Catégories</span></h1>
++                <a href="/catalogue.html" class="header-link">Catalogue</a>
++            </div>
+             <p>Choisissez un produit dans le catalogue. Les agents vérifient le stock, valident le paiement et expédient la commande.</p>
+         </header>
+ 
+@@ -107,6 +117,7 @@
+                         </div>
+                         <button type="submit" class="btn" id="submitBtn">Lancer le traitement</button>
+                     </form>
+                 </div>
+ 
+                 <!-- Historique -->
+                 <div class="card">
+                     <div class="flex-between">

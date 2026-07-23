@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SMA - Interface Théorie des Catégories</title>
     <style>
-        /* --- Reset et base --- */
         * {
             margin: 0;
             padding: 0;
@@ -25,30 +24,53 @@
             margin: 0 auto;
         }
 
-        /* --- En-tête --- */
         header {
             margin-bottom: 2rem;
             border-bottom: 2px solid #e2e8f0;
             padding-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
         }
 
-        header h1 {
+        header .title h1 {
             font-size: 2rem;
             font-weight: 600;
             color: #0f172a;
             letter-spacing: -0.02em;
         }
 
-        header h1 span {
+        header .title h1 span {
             font-weight: 400;
             color: #64748b;
         }
 
-        header p {
+        header .title p {
             color: #475569;
         }
 
-        /* --- Grille principale --- */
+        header .nav-links {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        header .nav-links a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            transition: background 0.2s;
+        }
+
+        header .nav-links a:hover {
+            background: #f1f5f9;
+        }
+
         .grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -62,7 +84,6 @@
             }
         }
 
-        /* --- Cartes --- */
         .card {
             background: #ffffff;
             border-radius: 12px;
@@ -91,7 +112,6 @@
             font-weight: 500;
         }
 
-        /* --- Formulaire --- */
         .form-group {
             margin-bottom: 1rem;
         }
@@ -118,6 +138,11 @@
             outline: none;
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-group input:disabled {
+            background: #e9ecef;
+            color: #6c757d;
         }
 
         .btn {
@@ -158,7 +183,6 @@
             font-size: 0.85rem;
         }
 
-        /* --- Panneau de logs (avec indicateur d'agent) --- */
         .log-panel {
             background: #0f172a;
             color: #e2e8f0;
@@ -246,7 +270,6 @@
             font-style: italic;
         }
 
-        /* --- Historique (tableau) --- */
         .table-wrapper {
             overflow-x: auto;
             margin-top: 0.5rem;
@@ -302,46 +325,55 @@
             justify-content: space-between;
             align-items: center;
         }
+        .price-display {
+            font-weight: 600;
+            color: #0f172a;
+            font-size: 1.1rem;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Système Multi-Agents <span>| Théorie des Catégories</span></h1>
-            <p>Saisissez une commande. Les agents distribués la traitent tandis que le Superviseur valide la composition catégorique.</p>
+            <div class="title">
+                <h1>Système Multi-Agents <span>| Théorie des Catégories</span></h1>
+                <p>Choisissez un produit. Les agents vérifient le stock, valident le paiement et expédient la commande.</p>
+            </div>
+            <div class="nav-links">
+                <a href="/catalog">[ Catalogue des produits ]</a>
+            </div>
         </header>
 
         <div class="grid">
-            <!-- COLONNE GAUCHE : Formulaire + Historique -->
             <div>
-                <!-- Formulaire -->
                 <div class="card">
-                    <h2>Nouvelle Commande <span class="badge">Client</span></h2>
+                    <h2>Nouvelle Commande <span class="badge">Catalogue</span></h2>
                     <form id="orderForm">
                         <div class="form-group">
-                            <label for="productName">Nom du produit / Modèle</label>
-                            <input type="text" id="productName" placeholder="Ex: UltraBook Pro" required>
+                            <label for="productSelect">Produit / Modèle</label>
+                            <select id="productSelect" required>
+                                <option value="">Chargement du catalogue...</option>
+                            </select>
                         </div>
                         <div class="form-group">
-                            <label for="productPrice">Prix (EUR)</label>
-                            <input type="number" id="productPrice" placeholder="1299" step="0.01" required>
+                            <label for="productPrice">Prix unitaire (Ariary)</label>
+                            <input type="text" id="productPrice" disabled placeholder="Sélectionnez un produit">
                         </div>
                         <div class="form-group">
                             <label for="productQty">Quantité</label>
-                            <input type="number" id="productQty" placeholder="1" value="1" min="1">
+                            <input type="number" id="productQty" value="1" min="1" required>
                         </div>
                         <div class="form-group">
                             <label for="modeSelect">Mode (Foncteur)</label>
                             <select id="modeSelect">
                                 <option value="normal">Normal (Traitement standard)</option>
-                                <option value="debug">Débogage (Avec délais et verbosité)</option>
+                                <option value="debug">Débogage (Avec délais)</option>
                             </select>
                         </div>
                         <button type="submit" class="btn" id="submitBtn">Lancer le traitement</button>
                     </form>
                 </div>
 
-                <!-- Historique -->
                 <div class="card">
                     <div class="flex-between">
                         <h2>Historique <span class="badge">Base de données</span></h2>
@@ -358,14 +390,13 @@
                                 </tr>
                             </thead>
                             <tbody id="historyBody">
-                                <tr><td colspan="4" style="text-align:center;color:#94a3b8;">Aucune commande pour le moment.</td></tr>
+                                <tr><td colspan="4" style="text-align:center;color:#94a3b8;">Aucune commande.</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- COLONNE DROITE : Panneau de logs -->
             <div>
                 <div class="card" style="height:100%; display:flex; flex-direction:column;">
                     <h2>Journal de traitement <span class="badge">Temps réel</span></h2>
@@ -393,8 +424,8 @@
         // --- Configuration ---
         const API_URL = '/run';
         const HISTORY_URL = '/history';
+        const PRODUCTS_URL = '/products';
 
-        // Éléments DOM
         const form = document.getElementById('orderForm');
         const submitBtn = document.getElementById('submitBtn');
         const logBody = document.getElementById('logBody');
@@ -402,8 +433,13 @@
         const agentName = document.getElementById('agentName');
         const historyBody = document.getElementById('historyBody');
         const refreshBtn = document.getElementById('refreshHistory');
+        const productSelect = document.getElementById('productSelect');
+        const productPrice = document.getElementById('productPrice');
+        const productQty = document.getElementById('productQty');
 
-        // --- Mapping Agent -> Icône + Couleur ---
+        let productsMap = {};
+
+        // --- Agents mapping ---
         const agents = {
             'Receptionniste': { icon: 'R', color: '#3b82f6' },
             'Verificateur': { icon: 'V', color: '#f59e0b' },
@@ -413,7 +449,7 @@
             'Inactif': { icon: '-', color: '#64748b' }
         };
 
-        // --- Fonctions de logs ---
+        // --- Logs ---
         function logMessage(message, type='info') {
             const time = new Date().toLocaleTimeString();
             const entry = document.createElement('div');
@@ -432,11 +468,6 @@
             logBody.innerHTML = '';
         }
 
-        function showEmptyLog() {
-            logBody.innerHTML = '<div class="log-empty">En attente de soumission...</div>';
-        }
-
-        // --- Mise à jour de l'icône d'agent ---
         function setActiveAgent(agentKey) {
             const agent = agents[agentKey] || agents['Inactif'];
             agentIcon.textContent = `[${agent.icon}]`;
@@ -444,13 +475,46 @@
             agentName.textContent = agentKey;
         }
 
-        // --- Simulation des étapes du SMA (en français) ---
-        async function simulateProcessing(orderData, mode) {
+        // --- Load Products ---
+        async function loadProducts() {
+            try {
+                const response = await fetch(PRODUCTS_URL);
+                if (!response.ok) throw new Error('Erreur chargement catalogue');
+                const products = await response.json();
+                
+                // Mise à jour du select (sans afficher le stock)
+                productSelect.innerHTML = '<option value="">-- Sélectionnez un produit --</option>';
+                productsMap = {};
+                products.forEach(p => {
+                    productsMap[p.id] = p;
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = p.name;  // On affiche uniquement le nom
+                    productSelect.appendChild(opt);
+                });
+            } catch (error) {
+                productSelect.innerHTML = '<option value="">Erreur chargement catalogue</option>';
+                console.error(error);
+            }
+        }
+
+        // --- Auto-fill price ---
+        productSelect.addEventListener('change', function() {
+            const id = parseInt(this.value);
+            if (id && productsMap[id]) {
+                productPrice.value = `${productsMap[id].price} Ariary`;
+            } else {
+                productPrice.value = '';
+            }
+        });
+
+        // --- Simulate Processing (French) ---
+        async function simulateProcessing(mode) {
             const steps = [
                 { msg: 'Commande reçue par le Réceptionniste.', type: 'info', agent: 'Receptionniste' },
-                { msg: 'Le Réceptionniste valide le format et crée la commande (État: Created).', type: 'ok', agent: 'Receptionniste' },
+                { msg: 'Le Réceptionniste valide le produit dans le catalogue.', type: 'ok', agent: 'Receptionniste' },
                 { msg: 'Commande transférée au Vérificateur.', type: 'info', agent: 'Verificateur' },
-                { msg: 'Le Vérificateur consulte le stock...', type: 'info', agent: 'Verificateur' },
+                { msg: 'Le Vérificateur consulte le stock en base de données...', type: 'info', agent: 'Verificateur' },
                 { msg: 'Stock disponible. Commande vérifiée (État: Verified).', type: 'ok', agent: 'Verificateur' },
                 { msg: 'Commande transférée au Banquier.', type: 'info', agent: 'Banquier' },
                 { msg: 'Le Banquier traite le paiement...', type: 'info', agent: 'Banquier' },
@@ -459,17 +523,15 @@
                 { msg: 'La Logistique prépare l\'expédition.', type: 'info', agent: 'Logistique' },
                 { msg: 'Commande expédiée et livrée (État: Delivered).', type: 'ok', agent: 'Logistique' },
                 { msg: 'Le Superviseur valide le chemin complet.', type: 'info', agent: 'Superviseur' },
-                { msg: 'Chemin: Created -> Verified -> Paid -> Shipped -> Delivered', type: 'path', agent: 'Superviseur' },
-                { msg: 'Statut du Superviseur : VALIDE', type: 'ok', agent: 'Superviseur' }
+                { msg: 'Chemin: Created -> Verified -> Paid -> Shipped -> Delivered', type: 'path', agent: 'Superviseur' }
             ];
 
             if (mode === 'debug') {
-                steps.splice(4, 0, { msg: '[DEBUG] Vérification supplémentaire des détails du produit.', type: 'warn', agent: 'Verificateur' });
-                steps.splice(8, 0, { msg: '[DEBUG] Latence de la passerelle de paiement simulée.', type: 'warn', agent: 'Banquier' });
+                steps.splice(4, 0, { msg: '[DEBUG] Vérification approfondie du stock.', type: 'warn', agent: 'Verificateur' });
+                steps.splice(8, 0, { msg: '[DEBUG] Latence du paiement simulée.', type: 'warn', agent: 'Banquier' });
             }
 
             logMessage('Début du traitement...', 'info');
-
             for (let i = 0; i < steps.length; i++) {
                 await new Promise(resolve => setTimeout(resolve, 400 + Math.random() * 300));
                 const step = steps[i];
@@ -479,17 +541,21 @@
             setActiveAgent('Inactif');
         }
 
-        // --- Soumission du formulaire ---
+        // --- Submit ---
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const product = document.getElementById('productName').value.trim();
-            const price = parseFloat(document.getElementById('productPrice').value);
-            const quantity = parseInt(document.getElementById('productQty').value) || 1;
+            const productId = parseInt(productSelect.value);
+            const quantity = parseInt(productQty.value) || 1;
             const mode = document.getElementById('modeSelect').value;
 
-            if (!product || isNaN(price) || price <= 0) {
-                logMessage('Erreur : Veuillez saisir un nom de produit et un prix valides.', 'err');
+            if (!productId || !productsMap[productId]) {
+                logMessage('Erreur : Veuillez sélectionner un produit valide.', 'err');
+                return;
+            }
+
+            if (quantity < 1) {
+                logMessage('Erreur : La quantité doit être d\'au moins 1.', 'err');
                 return;
             }
 
@@ -497,18 +563,18 @@
             clearLogs();
             setActiveAgent('Inactif');
 
-            logMessage(`Commande : ${product} (x${quantity}) - ${price} EUR`, 'info');
+            const product = productsMap[productId];
+            logMessage(`Commande : ${product.name} (x${quantity}) - ${product.price} Ariary`, 'info');
             logMessage(`Mode : ${mode}`, 'info');
 
-            await simulateProcessing({ product, price, quantity }, mode);
+            await simulateProcessing(mode);
 
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        product: product,
-                        price: price,
+                        product_id: productId,
                         quantity: quantity,
                         mode: mode
                     })
@@ -540,6 +606,7 @@
                 }
 
                 loadHistory();
+                loadProducts();
 
             } catch (error) {
                 logMessage(`Erreur API : ${error.message}`, 'err');
@@ -549,15 +616,15 @@
             }
         });
 
-        // --- Chargement de l'historique ---
+        // --- History ---
         async function loadHistory() {
             try {
                 const response = await fetch(HISTORY_URL);
-                if (!response.ok) throw new Error('Erreur de chargement');
+                if (!response.ok) throw new Error('Erreur');
                 const data = await response.json();
 
                 if (data.length === 0) {
-                    historyBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;">Aucune commande pour le moment.</td></tr>';
+                    historyBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;">Aucune commande.</td></tr>';
                     return;
                 }
 
@@ -583,15 +650,17 @@
                 });
                 historyBody.innerHTML = html;
             } catch (error) {
-                historyBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#dc2626;">Erreur de chargement de l'historique.</td></tr>`;
+                historyBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#dc2626;">Erreur historique.</td></tr>`;
             }
         }
 
-        refreshBtn.addEventListener('click', loadHistory);
+        refreshBtn.addEventListener('click', () => { loadHistory(); loadProducts(); });
 
+        // --- Init ---
         document.addEventListener('DOMContentLoaded', () => {
+            loadProducts();
             loadHistory();
-            showEmptyLog();
+            clearLogs();
             setActiveAgent('Inactif');
         });
     </script>
