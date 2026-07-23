@@ -1,10 +1,8 @@
-# src/logger.py - Système de logs professionnel (sans emoji)
+# src/logger.py - Système de logs professionnel
 
 import time
 
-# Codes couleurs ANSI
 RESET = "\033[0m"
-BLACK = "\033[30m"
 RED = "\033[31m"
 GREEN = "\033[32m"
 YELLOW = "\033[33m"

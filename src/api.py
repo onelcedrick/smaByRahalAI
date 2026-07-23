@@ -1,11 +1,12 @@
-# src/api.py - API REST avec timeout augmenté
+# src/api.py - API REST avec collecte de logs en temps réel
 
 import time
+import threading
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import uvicorn
 
 from src.sma_core import (
@@ -15,7 +16,8 @@ from src.sma_core import (
     Banquier,
     Logistique,
     Superviseur,
-    Foncteur
+    Foncteur,
+    LogCollector
 )
 from src.database import get_all_orders, get_stats, get_all_products, get_product
 from src.logger import api, info, ok, err
@@ -23,6 +25,10 @@ from src.logger import api, info, ok, err
 app = FastAPI(title="SMA + Théorie des Catégories API")
 
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
+
+# Stockage des logs en mémoire
+logs_storage: Dict[int, List[Dict[str, str]]] = {}
+logs_lock = threading.Lock()
 
 class OrderInput(BaseModel):
     product_id: int
@@ -74,19 +80,25 @@ async def run_order(order: OrderInput):
         "mode_actif": order.mode
     }
     
+    # Initialiser le stockage des logs pour cette commande
+    with logs_lock:
+        logs_storage[order_id] = []
+    
     api(f"Commande reçue {order_id} (Produit: {product[1]}, Qté: {order.quantity}, Mode: {order.mode})")
     
-    # --- Lancement du SMA ---
+    # --- Lancement du SMA avec collecteur de logs ---
     bus = MessageBus()
     foncteur = Foncteur(bus, mode=order.mode)
     
+    log_collector = LogCollector(order_id, logs_storage)
+    
     agents = [
-        Receptionniste("Receptionniste", bus),
-        Verificateur("Verificateur", bus),
-        Banquier("Banquier", bus),
-        Logistique("Logistique", bus)
+        Receptionniste("Receptionniste", bus, log_collector),
+        Verificateur("Verificateur", bus, log_collector),
+        Banquier("Banquier", bus, log_collector),
+        Logistique("Logistique", bus, log_collector)
     ]
-    superviseur = Superviseur(bus)
+    superviseur = Superviseur(bus, log_collector)
     agents.append(superviseur)
     
     for agent in agents:
@@ -95,13 +107,12 @@ async def run_order(order: OrderInput):
     time.sleep(0.5)
     bus.send("Receptionniste", {"order": order_dict})
     
-    # Attendre que le traitement soit terminé (max 10 secondes)
-    max_wait = 10
+    # Attendre la fin du traitement (max 12 secondes)
+    max_wait = 12
     waited = 0
     while waited < max_wait:
         time.sleep(0.5)
         waited += 0.5
-        # Vérifier si le superviseur a terminé la commande
         if order_id in superviseur.tracked_orders:
             status = superviseur.tracked_orders[order_id]["status"]
             if status in ["VALIDE", "ECHEC", "INVALIDE"]:
@@ -112,6 +123,11 @@ async def run_order(order: OrderInput):
         agent.stop()
     for agent in agents:
         agent.join(timeout=1)
+    
+    # Marquer la fin des logs
+    with logs_lock:
+        if order_id in logs_storage:
+            logs_storage[order_id].append({"time": time.strftime("%H:%M:%S"), "message": "--- Fin du traitement ---", "type": "info"})
     
     report = superviseur.report()
     if order_id not in report:
@@ -125,6 +141,14 @@ async def run_order(order: OrderInput):
         tracking_number=order_dict.get("tracking_number"),
         error=order_dict.get("error")
     )
+
+@app.get("/logs/{order_id}")
+async def get_logs(order_id: int):
+    """Retourne les logs collectés pour une commande donnée."""
+    with logs_lock:
+        if order_id not in logs_storage:
+            return {"logs": []}
+        return {"logs": logs_storage[order_id]}
 
 @app.get("/history")
 async def history():

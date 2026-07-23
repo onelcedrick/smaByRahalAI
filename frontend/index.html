@@ -10,7 +10,6 @@
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background: #f4f6f9;
@@ -18,12 +17,7 @@
             padding: 2rem;
             line-height: 1.6;
         }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
+        .container { max-width: 1400px; margin: 0 auto; }
         header {
             margin-bottom: 2rem;
             border-bottom: 2px solid #e2e8f0;
@@ -33,29 +27,19 @@
             align-items: center;
             flex-wrap: wrap;
         }
-
         header .title h1 {
             font-size: 2rem;
             font-weight: 600;
             color: #0f172a;
             letter-spacing: -0.02em;
         }
-
         header .title h1 span {
             font-weight: 400;
             color: #64748b;
         }
-
         header .title p {
             color: #475569;
         }
-
-        header .nav-links {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
         header .nav-links a {
             color: #3b82f6;
             text-decoration: none;
@@ -66,24 +50,18 @@
             background: #ffffff;
             transition: background 0.2s;
         }
-
         header .nav-links a:hover {
             background: #f1f5f9;
         }
-
         .grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 2rem;
             align-items: start;
         }
-
         @media (max-width: 1024px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
+            .grid { grid-template-columns: 1fr; }
         }
-
         .card {
             background: #ffffff;
             border-radius: 12px;
@@ -92,7 +70,6 @@
             border: 1px solid #e2e8f0;
             margin-bottom: 1.5rem;
         }
-
         .card h2 {
             font-size: 1.25rem;
             font-weight: 600;
@@ -102,7 +79,6 @@
             align-items: center;
             gap: 0.5rem;
         }
-
         .card h2 .badge {
             font-size: 0.7rem;
             background: #e2e8f0;
@@ -111,11 +87,9 @@
             border-radius: 20px;
             font-weight: 500;
         }
-
         .form-group {
             margin-bottom: 1rem;
         }
-
         .form-group label {
             display: block;
             font-size: 0.875rem;
@@ -123,7 +97,6 @@
             color: #334155;
             margin-bottom: 0.25rem;
         }
-
         .form-group input, .form-group select {
             width: 100%;
             padding: 0.6rem 0.75rem;
@@ -133,18 +106,15 @@
             background: #f8fafc;
             transition: border-color 0.2s;
         }
-
         .form-group input:focus, .form-group select:focus {
             outline: none;
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
-
         .form-group input:disabled {
             background: #e9ecef;
             color: #6c757d;
         }
-
         .btn {
             background: #3b82f6;
             color: white;
@@ -157,32 +127,26 @@
             transition: background 0.2s;
             width: 100%;
         }
-
         .btn:hover {
             background: #2563eb;
         }
-
         .btn:disabled {
             background: #94a3b8;
             cursor: not-allowed;
         }
-
         .btn-secondary {
             background: #f1f5f9;
             color: #1e293b;
             border: 1px solid #cbd5e1;
         }
-
         .btn-secondary:hover {
             background: #e2e8f0;
         }
-
         .btn-sm {
             width: auto;
             padding: 0.3rem 1rem;
             font-size: 0.85rem;
         }
-
         .log-panel {
             background: #0f172a;
             color: #e2e8f0;
@@ -199,7 +163,6 @@
             display: flex;
             flex-direction: column;
         }
-
         .log-panel .log-header {
             display: flex;
             align-items: center;
@@ -208,7 +171,6 @@
             padding-bottom: 0.5rem;
             border-bottom: 1px solid #334155;
         }
-
         .log-panel .agent-icon {
             font-size: 2.5rem;
             font-weight: 700;
@@ -219,84 +181,72 @@
             padding: 0.2rem 0.5rem;
             transition: all 0.3s;
         }
-
         .log-panel .agent-label {
             font-size: 1rem;
             font-weight: 500;
             color: #94a3b8;
         }
-
         .log-panel .agent-label .active-name {
             color: #f8fafc;
             font-weight: 600;
         }
-
         .log-panel .log-body {
             flex: 1;
             overflow-y: auto;
         }
-
         .log-panel .log-entry {
             margin-bottom: 0.2rem;
         }
-
         .log-panel .log-time {
             color: #94a3b8;
         }
-
+        .log-panel .log-elapsed {
+            color: #c084fc;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
         .log-panel .log-ok {
             color: #4ade80;
         }
-
         .log-panel .log-err {
             color: #f87171;
         }
-
         .log-panel .log-warn {
             color: #fbbf24;
         }
-
         .log-panel .log-info {
             color: #60a5fa;
         }
-
         .log-panel .log-path {
             color: #c084fc;
             font-weight: bold;
         }
-
         .log-panel .log-empty {
             color: #64748b;
             font-style: italic;
         }
-
         .table-wrapper {
             overflow-x: auto;
             margin-top: 0.5rem;
         }
-
         table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.85rem;
         }
-
         th, td {
             padding: 0.6rem 0.5rem;
             text-align: left;
             border-bottom: 1px solid #e2e8f0;
         }
-
         th {
             background: #f1f5f9;
             font-weight: 600;
             color: #334155;
         }
-
         tr:hover {
             background: #f8fafc;
         }
-
         .tag {
             display: inline-block;
             padding: 0.1rem 0.5rem;
@@ -305,12 +255,10 @@
             font-weight: 600;
             text-transform: uppercase;
         }
-
         .tag-valid { background: #dcfce7; color: #166534; }
         .tag-failed { background: #fee2e2; color: #991b1b; }
         .tag-invalid { background: #fef08a; color: #854d0e; }
         .tag-progress { background: #dbeafe; color: #1e40af; }
-
         .footer {
             margin-top: 2rem;
             text-align: center;
@@ -319,16 +267,10 @@
             border-top: 1px solid #e2e8f0;
             padding-top: 1.5rem;
         }
-
         .flex-between {
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-        .price-display {
-            font-weight: 600;
-            color: #0f172a;
-            font-size: 1.1rem;
         }
     </style>
 </head>
@@ -399,7 +341,7 @@
 
             <div>
                 <div class="card" style="height:100%; display:flex; flex-direction:column;">
-                    <h2>Journal de traitement <span class="badge">Temps réel</span></h2>
+                    <h2>Journal de traitement <span class="badge">Temps réel (logs backend)</span></h2>
                     <div id="logPanel" class="log-panel">
                         <div class="log-header">
                             <div id="agentIcon" class="agent-icon" style="color:#64748b;">[-]</div>
@@ -438,6 +380,10 @@
         const productQty = document.getElementById('productQty');
 
         let productsMap = {};
+        let currentOrderId = null;
+        let pollingInterval = null;
+        let logsDisplayed = 0;
+        let startTime = null;  // pour le chronomètre
 
         // --- Agents mapping ---
         const agents = {
@@ -450,7 +396,7 @@
         };
 
         // --- Logs ---
-        function logMessage(message, type='info') {
+        function logMessage(message, type='info', elapsed='') {
             const time = new Date().toLocaleTimeString();
             const entry = document.createElement('div');
             entry.className = 'log-entry';
@@ -459,13 +405,20 @@
             else if (type === 'err') cls = 'log-err';
             else if (type === 'warn') cls = 'log-warn';
             else if (type === 'path') cls = 'log-path';
-            entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="${cls}">${message}</span>`;
+            // Construction du message avec chronomètre
+            let elapsedDisplay = '';
+            if (elapsed !== '') {
+                elapsedDisplay = `<span class="log-elapsed">[+${elapsed}s]</span>`;
+            }
+            entry.innerHTML = `<span class="log-time">[${time}]</span> ${elapsedDisplay}<span class="${cls}">${message}</span>`;
             logBody.appendChild(entry);
             logBody.scrollTop = logBody.scrollHeight;
         }
 
         function clearLogs() {
             logBody.innerHTML = '';
+            logsDisplayed = 0;
+            startTime = null;
         }
 
         function setActiveAgent(agentKey) {
@@ -482,14 +435,13 @@
                 if (!response.ok) throw new Error('Erreur chargement catalogue');
                 const products = await response.json();
                 
-                // Mise à jour du select (sans afficher le stock)
                 productSelect.innerHTML = '<option value="">-- Sélectionnez un produit --</option>';
                 productsMap = {};
                 products.forEach(p => {
                     productsMap[p.id] = p;
                     const opt = document.createElement('option');
                     opt.value = p.id;
-                    opt.textContent = p.name;  // On affiche uniquement le nom
+                    opt.textContent = p.name;
                     productSelect.appendChild(opt);
                 });
             } catch (error) {
@@ -508,40 +460,77 @@
             }
         });
 
-        // --- Simulate Processing (French) ---
-        async function simulateProcessing(mode) {
-            const steps = [
-                { msg: 'Commande reçue par le Réceptionniste.', type: 'info', agent: 'Receptionniste' },
-                { msg: 'Le Réceptionniste valide le produit dans le catalogue.', type: 'ok', agent: 'Receptionniste' },
-                { msg: 'Commande transférée au Vérificateur.', type: 'info', agent: 'Verificateur' },
-                { msg: 'Le Vérificateur consulte le stock en base de données...', type: 'info', agent: 'Verificateur' },
-                { msg: 'Stock disponible. Commande vérifiée (État: Verified).', type: 'ok', agent: 'Verificateur' },
-                { msg: 'Commande transférée au Banquier.', type: 'info', agent: 'Banquier' },
-                { msg: 'Le Banquier traite le paiement...', type: 'info', agent: 'Banquier' },
-                { msg: 'Paiement approuvé. Commande payée (État: Paid).', type: 'ok', agent: 'Banquier' },
-                { msg: 'Commande transférée à la Logistique.', type: 'info', agent: 'Logistique' },
-                { msg: 'La Logistique prépare l\'expédition.', type: 'info', agent: 'Logistique' },
-                { msg: 'Commande expédiée et livrée (État: Delivered).', type: 'ok', agent: 'Logistique' },
-                { msg: 'Le Superviseur valide le chemin complet.', type: 'info', agent: 'Superviseur' },
-                { msg: 'Chemin: Created -> Verified -> Paid -> Shipped -> Delivered', type: 'path', agent: 'Superviseur' }
-            ];
+        // --- Polling des logs avec chronomètre ---
+        async function pollLogs(orderId) {
+            if (!orderId) return;
+            try {
+                const response = await fetch(`/logs/${orderId}`);
+                if (!response.ok) return;
+                const data = await response.json();
+                const logs = data.logs || [];
 
-            if (mode === 'debug') {
-                steps.splice(4, 0, { msg: '[DEBUG] Vérification approfondie du stock.', type: 'warn', agent: 'Verificateur' });
-                steps.splice(8, 0, { msg: '[DEBUG] Latence du paiement simulée.', type: 'warn', agent: 'Banquier' });
-            }
+                // Afficher les nouveaux logs
+                if (logs.length > logsDisplayed) {
+                    for (let i = logsDisplayed; i < logs.length; i++) {
+                        const entry = logs[i];
+                        // Calcul du temps écoulé depuis le début
+                        let elapsed = '';
+                        if (startTime !== null) {
+                            const now = Date.now();
+                            const delta = (now - startTime) / 1000;
+                            elapsed = delta.toFixed(3);
+                        }
+                        logMessage(entry.message, entry.type || 'info', elapsed);
+                        // Détecter l'agent dans le message pour mettre à jour l'icône
+                        const agentMatch = entry.message.match(/^\[([^\]]+)\]/);
+                        if (agentMatch) {
+                            const agentName = agentMatch[1];
+                            if (agentName in agents) {
+                                setActiveAgent(agentName);
+                            }
+                        }
+                    }
+                    logsDisplayed = logs.length;
+                }
 
-            logMessage('Début du traitement...', 'info');
-            for (let i = 0; i < steps.length; i++) {
-                await new Promise(resolve => setTimeout(resolve, 400 + Math.random() * 300));
-                const step = steps[i];
-                if (step.agent) setActiveAgent(step.agent);
-                logMessage(step.msg, step.type);
+                // Vérifier si le traitement est terminé
+                const lastLog = logs.length > 0 ? logs[logs.length-1] : null;
+                if (lastLog && lastLog.message.includes('--- Fin du traitement ---')) {
+                    stopPolling();
+                    loadHistory();
+                    setActiveAgent('Inactif');
+                    // Afficher le temps total
+                    if (startTime !== null) {
+                        const total = ((Date.now() - startTime) / 1000).toFixed(2);
+                        logMessage(`Durée totale du traitement : ${total} secondes`, 'info');
+                    }
+                }
+            } catch (error) {
+                console.error('Erreur polling logs:', error);
             }
+        }
+
+        function startPolling(orderId) {
+            if (pollingInterval) clearInterval(pollingInterval);
+            currentOrderId = orderId;
+            logsDisplayed = 0;
+            startTime = Date.now();  // démarrage du chronomètre
+            pollingInterval = setInterval(() => {
+                pollLogs(orderId);
+            }, 500);
+            pollLogs(orderId);
+        }
+
+        function stopPolling() {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+            currentOrderId = null;
             setActiveAgent('Inactif');
         }
 
-        // --- Submit ---
+        // --- Soumission ---
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -561,13 +550,12 @@
 
             submitBtn.disabled = true;
             clearLogs();
+            stopPolling();
             setActiveAgent('Inactif');
 
             const product = productsMap[productId];
             logMessage(`Commande : ${product.name} (x${quantity}) - ${product.price} Ariary`, 'info');
             logMessage(`Mode : ${mode}`, 'info');
-
-            await simulateProcessing(mode);
 
             try {
                 const response = await fetch(API_URL, {
@@ -586,31 +574,13 @@
                 }
 
                 const data = await response.json();
+                const orderId = data.order_id;
 
-                logMessage('--- Résultat final ---', 'info');
-                setActiveAgent('Superviseur');
-                if (data.status === 'VALID' || data.status === 'OK') {
-                    logMessage(`Statut : ${data.status}`, 'ok');
-                } else if (data.status === 'FAILED') {
-                    logMessage(`Statut : ${data.status}`, 'err');
-                    if (data.error) logMessage(`Erreur : ${data.error}`, 'err');
-                } else {
-                    logMessage(`Statut : ${data.status}`, 'warn');
-                }
-
-                if (data.path && data.path.length > 0) {
-                    logMessage(`Chemin : ${data.path.join(' -> ')}`, 'path');
-                }
-                if (data.tracking_number) {
-                    logMessage(`Suivi : ${data.tracking_number}`, 'info');
-                }
-
-                loadHistory();
-                loadProducts();
+                // Démarrer le polling (le chronomètre est lancé dans startPolling)
+                startPolling(orderId);
 
             } catch (error) {
-                logMessage(`Erreur API : ${error.message}`, 'err');
-            } finally {
+                logMessage(`Erreur : ${error.message}`, 'err');
                 submitBtn.disabled = false;
                 setActiveAgent('Inactif');
             }
@@ -656,7 +626,7 @@
 
         refreshBtn.addEventListener('click', () => { loadHistory(); loadProducts(); });
 
-        // --- Init ---
+        // --- Initialisation ---
         document.addEventListener('DOMContentLoaded', () => {
             loadProducts();
             loadHistory();

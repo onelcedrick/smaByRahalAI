@@ -1,4 +1,4 @@
-# src/superviseur.py - Superviseur et Foncteur (Version française)
+# src/superviseur.py - Superviseur (validateur) et Foncteur
 
 import threading
 import time
@@ -7,18 +7,17 @@ from src.modelisation import CATEGORY
 from src.database import save_order
 
 class Superviseur(threading.Thread):
-    """
-    Agent observateur qui valide les compositions catégoriques.
-    """
-    def __init__(self, bus):
+    def __init__(self, bus, log_collector):
         super().__init__()
         self.nom = "Superviseur"
         self.bus = bus
         self.bus.register(self.nom)
         self.active = True
         self.daemon = True
-        self.tracked_orders = {}  # {id: {"path": [], "status": "..."}}
+        self.tracked_orders = {}
         self.violations = []
+        self.log_collector = log_collector
+        self.log_collector.log("[Superviseur] Démarré", "info")
     
     def stop(self):
         self.active = False
@@ -36,7 +35,6 @@ class Superviseur(threading.Thread):
         order = message.get("order")
         if not order:
             return
-        
         order_id = order.get("id")
         history = order.get("history", [])
         status = order.get("status")
@@ -48,10 +46,8 @@ class Superviseur(threading.Thread):
         if history and len(history) > len(self.tracked_orders[order_id]["path"]):
             self.tracked_orders[order_id]["path"] = history.copy()
         
-        # Si la commande est terminée ou en échec
         if status == "TERMINATED" or status == "FAILED":
             path = self.tracked_orders[order_id]["path"]
-            
             if len(path) >= 2:
                 valid = True
                 for i in range(len(path)-1):
@@ -66,15 +62,14 @@ class Superviseur(threading.Thread):
                         valid = False
                         violation = f"Transition invalide {dep} -> {arr}"
                         self.violations.append((order_id, violation))
-                        warn(f"VIOLATION : {violation}")
+                        self.log_collector.log(f"[Superviseur] VIOLATION : {violation}", "err")
                         break
-                
                 if valid:
                     self.tracked_orders[order_id]["status"] = "VALIDE"
-                    ok(f"Commande {order_id} : chemin valide ! {' -> '.join(path)}")
+                    self.log_collector.log(f"[Superviseur] Commande {order_id} : chemin valide ! {' -> '.join(path)}", "ok")
                     save_order(
                         id_cmd=order_id,
-                        product=order.get("product", "Inconnu"),
+                        product=order.get("product_name", "Inconnu"),
                         price=order.get("price", 0.0),
                         quantity=order.get("quantity", 1),
                         status="VALIDE",
@@ -87,7 +82,7 @@ class Superviseur(threading.Thread):
                     self.tracked_orders[order_id]["status"] = "INVALIDE"
                     save_order(
                         id_cmd=order_id,
-                        product=order.get("product", "Inconnu"),
+                        product=order.get("product_name", "Inconnu"),
                         price=order.get("price", 0.0),
                         quantity=order.get("quantity", 1),
                         status="INVALIDE",
@@ -98,10 +93,10 @@ class Superviseur(threading.Thread):
                     )
             else:
                 self.tracked_orders[order_id]["status"] = "ECHEC"
-                warn(f"Commande {order_id} : chemin incomplet {path}")
+                self.log_collector.log(f"[Superviseur] Commande {order_id} : chemin incomplet {path}", "warn")
                 save_order(
                     id_cmd=order_id,
-                    product=order.get("product", "Inconnu"),
+                    product=order.get("product_name", "Inconnu"),
                     price=order.get("price", 0.0),
                     quantity=order.get("quantity", 1),
                     status="ECHEC",
@@ -110,9 +105,9 @@ class Superviseur(threading.Thread):
                     error=order.get("error", "Échec métier"),
                     mode=mode
                 )
+        self.log_collector.log("[Superviseur] Analyse terminée", "info")
     
     def report(self):
-        """Génère un rapport des compositions vérifiées."""
         print("\n" + "="*60)
         print("RAPPORT DU SUPERVISEUR")
         print("="*60)
@@ -126,12 +121,7 @@ class Superviseur(threading.Thread):
         print("="*60)
         return self.tracked_orders
 
-
 class Foncteur:
-    """
-    Le Foncteur transforme globalement le comportement du SMA
-    (ex: mode normal vs debug) sans modifier les agents.
-    """
     def __init__(self, bus, mode="normal"):
         self.bus = bus
         self.mode = mode
@@ -155,7 +145,6 @@ class Foncteur:
         return {}
     
     def apply(self, arrow, order):
-        """Applique la transformation du foncteur à une flèche."""
         if arrow in self.rules:
             rule = self.rules[arrow]
             order["mode_actif"] = self.mode

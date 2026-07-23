@@ -1,4 +1,4 @@
-# src/sma_core.py - SMA parallèle (Vérificateur avec stock réel)
+# src/sma_core.py - SMA parallèle avec délais par agent
 
 import threading
 import queue
@@ -10,6 +10,22 @@ from src.superviseur import Superviseur, Foncteur
 from src.database import init_db, get_product, update_stock
 
 init_db()
+
+# --- 0. LOG COLLECTOR ---
+class LogCollector:
+    def __init__(self, order_id, storage):
+        self.order_id = order_id
+        self.storage = storage
+        self.lock = threading.Lock()
+    
+    def log(self, message, type="info"):
+        with self.lock:
+            if self.order_id in self.storage:
+                self.storage[self.order_id].append({
+                    "time": time.strftime("%H:%M:%S"),
+                    "message": message,
+                    "type": type
+                })
 
 # --- 1. BUS DE MESSAGES ---
 class MessageBus:
@@ -42,16 +58,17 @@ class MessageBus:
                 return None
         return None
 
-
 # --- 2. AGENT DE BASE ---
 class Agent(threading.Thread):
-    def __init__(self, name, bus):
+    def __init__(self, name, bus, log_collector):
         super().__init__()
         self.name = name
         self.bus = bus
         self.bus.register(name)
         self.active = True
         self.daemon = True
+        self.log_collector = log_collector
+        self.delay = 1.5  # délai par défaut (en secondes)
     
     def stop(self):
         self.active = False
@@ -70,183 +87,126 @@ class Agent(threading.Thread):
             time.sleep(0.05)
         info(f"{self.name} arrêté")
 
-
-# --- 3. AGENTS SPÉCIFIQUES ---
-
+# --- 3. AGENTS SPÉCIFIQUES AVEC DÉLAIS ---
 class Receptionniste(Agent):
     def process(self, message):
         order = message.get("order", {})
-        recv(f"Commande brute {order.get('id', '?')} - Contenu reçu: {order}")
+        self.log_collector.log(f"[Receptionniste] Commande brute {order.get('id', '?')} - Contenu: {order}", "recv")
         
-        # Vérification stricte des champs obligatoires
         product_id = order.get("product_id")
         quantity = order.get("quantity")
-        
         if product_id is None:
-            err(f"Commande {order.get('id', '?')} refusée : 'product_id' manquant ou nul")
+            err(f"Commande {order.get('id', '?')} refusée : product_id manquant")
+            self.log_collector.log("[Receptionniste] Erreur : product_id manquant", "err")
             order["status"] = "REFUSED"
             order["error"] = "Format invalide (product_id manquant)"
             return None
-        
         if quantity is None or quantity <= 0:
-            err(f"Commande {order.get('id', '?')} refusée : quantité invalide ({quantity})")
+            err(f"Commande {order.get('id', '?')} refusée : quantité invalide")
+            self.log_collector.log("[Receptionniste] Erreur : quantité invalide", "err")
             order["status"] = "REFUSED"
             order["error"] = "Quantité invalide"
             return None
         
-        # Récupération du produit en base
         product = get_product(product_id)
         if not product:
             order["status"] = "REFUSED"
             order["error"] = "Produit non trouvé en base"
-            err(f"Commande {order['id']} refusée : produit inconnu (id={product_id})")
+            self.log_collector.log(f"[Receptionniste] Produit {product_id} inconnu", "err")
             return None
         
-        # Ajout des infos produit (snapshot)
-        order["product_name"] = product[1]   # nom
-        order["price"] = product[2]          # prix
-        order["stock"] = product[3]          # stock actuel
-        
+        order["product_name"] = product[1]
+        order["price"] = product[2]
+        order["stock"] = product[3]
         order["state"] = "Created"
         order["status"] = "OK"
         order["history"] = ["Created"]
-        ok(f"Commande {order['id']} validée ({product[1]}) - Envoi au Vérificateur")
+        self.log_collector.log(f"[Receptionniste] Commande {order['id']} validée ({product[1]})", "ok")
+        # Délai de traitement
+        time.sleep(self.delay)
         return {"target": "Verificateur", "message": {"order": order}}
-
 
 class Verificateur(Agent):
     def process(self, message):
         order = message.get("order", {})
-        recv(f"Commande {order.get('id', '?')} (état: {order.get('state', '?')})")
-        
+        self.log_collector.log(f"[Verificateur] Commande {order.get('id', '?')} (état: {order.get('state', '?')})", "recv")
         product_id = order.get("product_id")
         quantity = order.get("quantity", 1)
-        
-        # Re-vérification du stock en base (au cas où)
         product = get_product(product_id)
         if not product:
             order["status"] = "FAILED"
             order["error"] = "Produit non trouvé"
-            err(f"Commande {order['id']} : PRODUIT INCONNU")
+            self.log_collector.log("[Verificateur] Produit inconnu", "err")
+            time.sleep(self.delay)
             return {"target": "Banquier", "message": {"order": order}}
-        
-        # Vérification de la disponibilité
         if product[3] < quantity:
             order["status"] = "FAILED"
             order["error"] = f"Stock insuffisant (demande: {quantity}, disponible: {product[3]})"
-            err(f"Commande {order['id']} : STOCK INSUFFISANT")
+            self.log_collector.log("[Verificateur] Stock insuffisant", "err")
+            time.sleep(self.delay)
             return {"target": "Banquier", "message": {"order": order}}
-        
-        # Décrémenter le stock
         update_stock(product_id, -quantity)
-        
-        # Appliquer la flèche "Verify"
         next_state = get_next_state(order["state"], "Verify")
         if next_state:
             order["state"] = next_state
             order["status"] = "OK"
             order["history"].append(next_state)
-            ok(f"Commande {order['id']} vérifiée (Stock OK, nouveau stock: {product[3] - quantity})")
+            self.log_collector.log(f"[Verificateur] Commande {order['id']} vérifiée (stock OK)", "ok")
+        time.sleep(self.delay)
         return {"target": "Banquier", "message": {"order": order}}
-
 
 class Banquier(Agent):
     def process(self, message):
         order = message.get("order", {})
-        recv(f"Commande {order.get('id', '?')} (état: {order.get('state', '?')})")
+        self.log_collector.log(f"[Banquier] Commande {order.get('id', '?')} (état: {order.get('state', '?')})", "recv")
         if order.get("status") == "FAILED":
-            warn(f"Commande {order['id']} déjà en échec")
+            self.log_collector.log("[Banquier] Commande déjà en échec", "warn")
+            time.sleep(self.delay)
             return {"target": "Logistique", "message": {"order": order}}
-        
         payment_ok = random.random() < 0.7
         if not payment_ok:
             order["status"] = "FAILED"
             order["error"] = "Paiement refusé"
-            err(f"Commande {order['id']} : PAIEMENT REFUSÉ")
+            self.log_collector.log("[Banquier] Paiement refusé", "err")
+            time.sleep(self.delay)
             return {"target": "Logistique", "message": {"order": order}}
-        
         next_state = get_next_state(order["state"], "Pay")
         if next_state:
             order["state"] = next_state
             order["status"] = "OK"
             order["history"].append(next_state)
-            ok(f"Commande {order['id']} payée ({order.get('price', '?')} EUR)")
+            self.log_collector.log(f"[Banquier] Commande {order['id']} payée", "ok")
+        time.sleep(self.delay)
         return {"target": "Logistique", "message": {"order": order}}
-
 
 class Logistique(Agent):
     def process(self, message):
         order = message.get("order", {})
-        recv(f"Commande {order.get('id', '?')} (état: {order.get('state', '?')})")
+        self.log_collector.log(f"[Logistique] Commande {order.get('id', '?')} (état: {order.get('state', '?')})", "recv")
         if order.get("status") == "FAILED":
-            warn(f"Commande {order['id']} en échec, expédition annulée")
+            self.log_collector.log("[Logistique] Commande en échec, expédition annulée", "warn")
+            time.sleep(self.delay)
             return {"target": "Superviseur", "message": {"order": order}}
-        
         tracking = f"AZ-{random.randint(1000, 9999)}-FR"
         order["tracking_number"] = tracking
-        
         next_state = get_next_state(order["state"], "Ship")
         if next_state:
             order["state"] = next_state
             order["history"].append(next_state)
-        
         next_state = get_next_state(order["state"], "Deliver")
         if next_state:
             order["state"] = next_state
             order["history"].append(next_state)
-        
         order["status"] = "TERMINATED"
-        ok(f"Commande {order['id']} expédiée ! Suivi : {tracking}")
+        self.log_collector.log(f"[Logistique] Commande {order['id']} expédiée ! Suivi : {tracking}", "ok")
+        time.sleep(self.delay)
         return {"target": "Superviseur", "message": {"order": order}}
 
+# --- Le Superviseur est défini dans superviseur.py, on n'ajoute pas de délai ici (il est déjà réactif).
+# Mais on peut lui ajouter un petit délai pour éviter les doublons. On le fera dans superviseur.py.
 
-# --- 4. FONCTION DE LANCEMENT ---
+# --- 4. FONCTION DE LANCEMENT (pour compatibilité, non utilisée directement) ---
 def run_sma(order_test, mode="normal"):
-    sep("=")
-    info(f"LANCEMENT DU SMA AVEC CATÉGORIES (mode: {mode})")
-    sep("=")
-    
-    bus = MessageBus()
-    foncteur = Foncteur(bus, mode=mode)
-    info(f"Foncteur créé en mode '{mode}'")
-    
-    agents = [
-        Receptionniste("Receptionniste", bus),
-        Verificateur("Verificateur", bus),
-        Banquier("Banquier", bus),
-        Logistique("Logistique", bus)
-    ]
-    
-    superviseur = Superviseur(bus)
-    agents.append(superviseur)
-    
-    for agent in agents:
-        agent.start()
-    
-    time.sleep(0.5)
-    order_test["mode_actif"] = mode
-    info(f"Injection de la commande {order_test['id']}")
-    bus.send("Receptionniste", {"order": order_test})
-    
-    time.sleep(6)
-    
-    for agent in agents:
-        agent.stop()
-    for agent in agents:
-        agent.join(timeout=1)
-    
-    superviseur.report()
-    sep("=")
-    info("SMA TERMINÉ")
-    sep("=")
-
-
-# --- 5. MAIN ---
-if __name__ == "__main__":
-    info("Test du SMA avec Catalogue Produits")
-    # Exemple de commande avec product_id (1 = UltraBook Pro)
-    order1 = {"id": 1001, "product_id": 1, "quantity": 1, "status": "INIT"}
-    run_sma(order1, mode="normal")
-    
-    order2 = {"id": 1002, "product_id": 3, "quantity": 2, "status": "INIT"}  # Casque Audio Pro
-    run_sma(order2, mode="debug")
+    # Cette fonction n'est pas utilisée via l'API, mais on la garde pour le test en ligne de commande.
+    # L'API utilise le LogCollector et les agents avec délais.
+    pass
